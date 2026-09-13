@@ -1,5 +1,5 @@
 import java.util.Scanner;
-
+import java.util.Objects;
 record BankInfo(String name, String branch) {
 }
 
@@ -13,23 +13,52 @@ enum MenuOption {
 
 }
 
-class Customer {
+class Customer implements Cloneable {
     private String name;
     private String email;
     private String mobile;
     private final String customerId;
+    private Address address;
     private static long customerCounter = 0;
 
-    Customer(String name, String email, String mobile) {
+    Customer(String name, String email, String mobile, Address address) {
         this.name = name;
         this.email = email;
         this.mobile = mobile;
         this.customerId = generateCustomerId();
+        this.address = address;
     }
+    public static class Address {
+        private String line;
+        private String city;
+        private String pincode;
 
+        Address(String line, String city, String pincode) {
+            this.line = line;
+            this.city = city;
+            this.pincode = pincode;
+        }
+        public String getCity() {
+            return city;
+        }
+        public String getLine() {
+            return line;
+        }
+        public String getPincode() {
+            return pincode;
+        }
+    }
+    public Customer clone() {
+        try {
+            return (Customer) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
     private static String generateCustomerId() {
         customerCounter++;
-        return "CUST" + customerCounter + 100;
+        return "CUST" + (customerCounter + 100);
     }
 
     public static long getCustomerCounter() {
@@ -50,6 +79,10 @@ class Customer {
 
     public String getName() {
         return name;
+    }
+
+    public Address getAddress() {
+        return address;
     }
 }
 
@@ -76,14 +109,14 @@ class Account {
         return String.format("AC%04d", accountCounter);
     }
 
-    public void Deposit(long amount) {
+    public void deposit(long amount) {
         if (amount < 0) {
             return;
         }
         balance += amount;
     }
 
-    public boolean Withdraw(long amount) {
+    public boolean withdraw(long amount) {
         if (amount < 0) {
             return false;
         }
@@ -114,6 +147,26 @@ class Account {
     public boolean isActive() {
         return active;
     }
+
+    public String toString() {
+        return "Owner :" + ownerName + "'s account number is : " + accountNumber + " available balance is :" + balance;
+    }
+
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
+        if(!(obj instanceof Account)) {
+            return false;
+        }
+
+        Account other = (Account) obj;
+        return this.accountNumber.equals(other.accountNumber);
+    }
+    public int hashCode() {
+        return Objects.hash(accountNumber);
+    }
 }
 
 class MiniBank {
@@ -125,6 +178,18 @@ class MiniBank {
         BankInfo bank = new BankInfo("HDFC", "Surat");
 
         System.out.println(bank);
+        Account[] accounts = new Account[3];
+        accounts[0] = new Account("Smit", 1500);
+        accounts[1] = new Account("Dhruv", 2000);
+        accounts[2] = new Account("Harsh");
+
+        accounts[0].deposit(500);
+        accounts[1].withdraw(500);
+        accounts[2].deposit(1500);
+        for(int i=0; i<3; i++) {
+            System.out.println(accounts[i].getBalance());
+        }
+
 
         MenuOption menu = null;
         int choice;
