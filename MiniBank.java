@@ -1,16 +1,42 @@
 import java.util.Scanner;
 import java.util.Objects;
+import java.util.regex.Pattern;
+
 record BankInfo(String name, String branch) {
 }
 
-enum MenuOption {
-
-    OPEN_ACCOUNT,
+enum TransactionType {
     DEPOSIT,
     WITHDRAW,
-    TRANSFER,
-    EXIT
+    TRANSFER
+}
 
+record Command(TransactionType type, String accountNumber, long amount) {
+
+}
+
+class CommandParese {
+    public static Command parse(String line) {
+        String command[] = line.trim().split("\\s+", 3);
+        TransactionType type = TransactionType.valueOf(command[0]);
+        String accountNumber = command[1];
+        long amount = Long.parseLong(command[2]);
+
+        return new Command(type, accountNumber, amount);
+    }
+}
+
+class StatementFormatter {
+    public static String buildStatement(Account account) {
+        StringBuilder statement = new StringBuilder();
+        statement.append("=========== Account Statement =========\n");
+        statement.append("Account Number : ").append(account.getAccountNumber()).append("\n");
+        statement.append("Owner Name     : ").append(account.getOwnerName()).append("\n");
+        statement.append("Balance        : ").append(account.getBalance()).append("\n");
+        statement.append("=======================================");
+
+        return statement.toString();
+    }
 }
 
 class Customer implements Cloneable {
@@ -28,6 +54,7 @@ class Customer implements Cloneable {
         this.customerId = generateCustomerId();
         this.address = address;
     }
+
     public static class Address {
         private String line;
         private String city;
@@ -38,24 +65,28 @@ class Customer implements Cloneable {
             this.city = city;
             this.pincode = pincode;
         }
+
         public String getCity() {
             return city;
         }
+
         public String getLine() {
             return line;
         }
+
         public String getPincode() {
             return pincode;
         }
     }
+
     public Customer clone() {
         try {
             return (Customer) super.clone();
-        }
-        catch (CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
     }
+
     private static String generateCustomerId() {
         customerCounter++;
         return "CUST" + (customerCounter + 100);
@@ -153,19 +184,43 @@ class Account {
     }
 
     public boolean equals(Object obj) {
-        if(this == obj) {
+        if (this == obj) {
             return true;
         }
 
-        if(!(obj instanceof Account)) {
+        if (!(obj instanceof Account)) {
             return false;
         }
 
         Account other = (Account) obj;
         return this.accountNumber.equals(other.accountNumber);
     }
+
     public int hashCode() {
         return Objects.hash(accountNumber);
+    }
+}
+
+class Validator {
+    public static final Pattern MOBILE_PATTERN = Pattern.compile("^[6-9][0-9]{9}$");
+    public static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    public static final Pattern PAN_PATTERN = Pattern.compile("^[A-Z]{5}[0-9]{4}[A-Z]$");
+    public static final Pattern IFSC_PATTERN = Pattern.compile("^[A-Z]{4}0[A-Z0-9]{6}$");
+
+    public static boolean isValidMobile(String mobile) {
+        return MOBILE_PATTERN.matcher(mobile).matches();
+    }
+
+    public static boolean isValidEmail(String email) {
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
+
+    public static boolean isValidPAN(String PAN) {
+        return PAN_PATTERN.matcher(PAN).matches();
+    }
+
+    public static boolean isValidifsc(String ifsc) {
+        return IFSC_PATTERN.matcher(ifsc).matches();
     }
 }
 
@@ -186,12 +241,11 @@ class MiniBank {
         accounts[0].deposit(500);
         accounts[1].withdraw(500);
         accounts[2].deposit(1500);
-        for(int i=0; i<3; i++) {
+        for (int i = 0; i < 3; i++) {
             System.out.println(accounts[i].getBalance());
         }
 
-
-        MenuOption menu = null;
+        // MenuOption menu = null;
         int choice;
         do {
 
@@ -205,14 +259,14 @@ class MiniBank {
             System.out.print("Enter your choice :");
             choice = sc.nextInt();
 
-            menu = switch (choice) {
-                case 1 -> MenuOption.OPEN_ACCOUNT;
-                case 2 -> MenuOption.DEPOSIT;
-                case 3 -> MenuOption.WITHDRAW;
-                case 4 -> MenuOption.TRANSFER;
-                case 5 -> MenuOption.EXIT;
-                default -> null;
-            };
+            // menu = switch (choice) {
+            // case 1 -> MenuOption.OPEN_ACCOUNT;
+            // case 2 -> MenuOption.DEPOSIT;
+            // case 3 -> MenuOption.WITHDRAW;
+            // case 4 -> MenuOption.TRANSFER;
+            // case 5 -> MenuOption.EXIT;
+            // default -> null;
+            // };
         } while (choice != 5);
 
     }
