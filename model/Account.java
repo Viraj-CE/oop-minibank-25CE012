@@ -47,30 +47,41 @@ public abstract class Account
     }
 
     @Override
-    public void deposit(long amount) {
+    public void deposit(long amount) throws exception.InvalidAmountException {
 
-        if (amount < 0) {
-            return;
+        if (amount <= 0) {
+            throw new exception.InvalidAmountException("Invalid amount");
         }
 
         balance += amount;
     }
 
     @Override
-    public boolean withdraw(long amount) {
+    public boolean withdraw(long amount) throws exception.InsufficientFundsException, exception.InvalidAmountException {
 
-        if (amount < 0) {
-            return false;
+        if (amount <= 0) {
+            throw new exception.InvalidAmountException("Invalid amount");
         }
 
-        if (amount <= balance) {
-
-            balance -= amount;
-
-            return true;
+        if (amount > balance) {
+            long shortfall = amount - balance;
+            throw new exception.InsufficientFundsException("Insufficient funds", shortfall);
         }
 
-        return false;
+        balance -= amount;
+        return true;
+    }
+
+    public void transfer(Account to, long amount) throws exception.BankException {
+
+        try {
+            this.withdraw(amount);
+            to.deposit(amount);
+        } catch (exception.BankException e) {
+            throw e;
+        } finally {
+
+        }
     }
 
     public static int getAccountCounter() {
