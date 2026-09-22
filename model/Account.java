@@ -47,7 +47,7 @@ public abstract class Account
     }
 
     @Override
-    public void deposit(long amount) throws exception.InvalidAmountException {
+    public synchronized void deposit(long amount) throws exception.InvalidAmountException {
 
         if (amount <= 0) {
             throw new exception.InvalidAmountException("Invalid amount");
@@ -57,7 +57,7 @@ public abstract class Account
     }
 
     @Override
-    public boolean withdraw(long amount) throws exception.InsufficientFundsException, exception.InvalidAmountException {
+    public synchronized boolean withdraw(long amount) throws exception.InsufficientFundsException, exception.InvalidAmountException {
 
         if (amount <= 0) {
             throw new exception.InvalidAmountException("Invalid amount");
