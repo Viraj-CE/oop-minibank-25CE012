@@ -7,7 +7,7 @@ import model.annotation.Id;
 import model.annotation.Positive;
 
 public abstract class Account
-        implements Transactable, InterestBearing, Serializable {
+        implements Transactable, InterestBearing, Serializable, Comparable<Account> {
 
     private static final long serialVersionUID = 1L;
 
@@ -143,5 +143,10 @@ public abstract class Account
     public int hashCode() {
 
         return Objects.hash(accountNumber);
+    }
+
+    @Override
+    public int compareTo(Account o) {
+        return this.accountNumber.compareTo(o.accountNumber);
     }
 }
