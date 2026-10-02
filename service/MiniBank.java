@@ -5,7 +5,9 @@ import java.util.Scanner;
 import model.Account;
 import model.BankInfo;
 import model.SavingsAccount;
-import model.WithdrawRule;
+import util.ReportGenerator;
+import util.StatePersister;
+import util.TransactionLog;
 
 import static util.Validator.isValidMobile;
 
@@ -19,87 +21,25 @@ public class MiniBank {
 
         System.out.println(bank);
 
-        // =========================================
-        // WithdrawRule using Anonymous Class
-        // =========================================
+        BankService service = new BankService();
 
-        WithdrawRule rule1 = new WithdrawRule() {
+        java.nio.file.Path data = java.nio.file.Paths.get("data", "accounts.dat");
+        try {
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get("data"));
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get("logs"));
+        } catch (Exception e) {
 
-            @Override
-            public boolean allow(Account account, long amount) {
+        }
 
-                return amount > 0
-                        && amount <= account.getBalance()
-                        && account.canWithdraw();
+        Account[] loaded = StatePersister.load(data);
+        if (loaded != null) {
+            for (Account a : loaded) {
+                service.openAccount(a);
             }
-        };
-
-        // =========================================
-        // WithdrawRule using Lambda
-        // =========================================
-
-        WithdrawRule rule2 = (account, amount) ->
-                amount > 0
-                && amount <= account.getBalance()
-                && account.canWithdraw();
-
-        // =========================================
-        // Create Account
-        // =========================================
-
-        Account account =
-                new SavingsAccount(
-                        "Viraj",
-                        5000,
-                        1000
-                );
-
-        System.out.println("\nAccount:");
-        System.out.println(account);
-
-        // =========================================
-        // Test Anonymous Class
-        // =========================================
-
-        System.out.println("\nAnonymous Class Rule:");
-
-        if (rule1.allow(account, 2000)) {
-
-            System.out.println("Withdrawal allowed");
-
-        } else {
-
-            System.out.println("Withdrawal denied");
         }
-
-        // =========================================
-        // Test Lambda
-        // =========================================
-
-        System.out.println("\nLambda Rule:");
-
-        if (rule2.allow(account, 2000)) {
-
-            System.out.println("Withdrawal allowed");
-
-        } else {
-
-            System.out.println("Withdrawal denied");
-        }
-
-        // =========================================
-        // Static Import Example
-        // =========================================
 
         System.out.println("\nMobile Validation:");
-
-        System.out.println(
-                isValidMobile("9876543210")
-        );
-
-        // =========================================
-        // Menu
-        // =========================================
+        System.out.println(isValidMobile("9876543210"));
 
         int choice;
 
@@ -110,14 +50,67 @@ public class MiniBank {
             System.out.println("2. Deposit");
             System.out.println("3. Withdraw");
             System.out.println("4. Transfer");
-            System.out.println("5. Exit");
+            System.out.println("5. Report");
+            System.out.println("6. Exit");
             System.out.println("====================================");
 
             System.out.print("Enter your choice : ");
 
             choice = sc.nextInt();
 
-        } while (choice != 5);
+            if (choice == 1) {
+                Account acc = new SavingsAccount("Viraj", 5000, 1000);
+                service.openAccount(acc);
+                System.out.println(acc);
+            } else if (choice == 2) {
+                System.out.print("Enter account number : ");
+                String accNo = sc.next();
+                System.out.print("Enter amount : ");
+                long amt = sc.nextLong();
+                try {
+                    service.deposit(accNo, amt);
+                    TransactionLog.append(java.nio.file.Paths.get("logs", "log.txt"), "DEPOSIT " + accNo + " " + amt);
+                    System.out.println("Deposited");
+                } catch (Exception e) {
+                    System.out.println("Failed");
+                }
+            } else if (choice == 3) {
+                System.out.print("Enter account number : ");
+                String accNo = sc.next();
+                System.out.print("Enter amount : ");
+                long amt = sc.nextLong();
+                try {
+                    service.withdraw(accNo, amt);
+                    TransactionLog.append(java.nio.file.Paths.get("logs", "log.txt"), "WITHDRAW " + accNo + " " + amt);
+                    System.out.println("Withdrawn");
+                } catch (Exception e) {
+                    System.out.println("Failed");
+                }
+            } else if (choice == 4) {
+                System.out.print("From : ");
+                String from = sc.next();
+                System.out.print("To : ");
+                String to = sc.next();
+                System.out.print("Amount : ");
+                long amt = sc.nextLong();
+                try {
+                    service.transfer(from, to, amt);
+                    TransactionLog.append(java.nio.file.Paths.get("logs", "log.txt"), "WITHDRAW " + from + " " + amt);
+                    TransactionLog.append(java.nio.file.Paths.get("logs", "log.txt"), "DEPOSIT " + to + " " + amt);
+                    System.out.println("Transferred");
+                } catch (Exception e) {
+                    System.out.println("Failed");
+                }
+            } else if (choice == 5) {
+                ReportGenerator.generate();
+                System.out.println("Report generated");
+            }
+
+        } while (choice != 6);
+
+        java.util.ArrayList<Account> list = service.listAccounts();
+        Account[] arr = list.toArray(new Account[0]);
+        StatePersister.save(arr, data);
 
         sc.close();
 
